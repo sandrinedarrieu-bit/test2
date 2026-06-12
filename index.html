@@ -1,79 +1,192 @@
-from pathlib import Path
-import re
-
-# Use the most recent working VoxPro file as a base
-candidates = [
-    Path("/mnt/data/voxpro_demo_actions_metier.html"),
-    Path("/mnt/data/voxpro_index_exemples_ok.html"),
-    Path("/mnt/data/Texte collé(1).txt"),
-]
-src = next(p for p in candidates if p.exists())
-base = src.read_text(encoding="utf-8")
-
-# Extract CSS from the existing file to preserve visual identity
-css_match = re.search(r"<style>(.*?)</style>", base, flags=re.S)
-css = css_match.group(1) if css_match else ""
-
-# Add/override CSS for the new structure
-extra_css = r"""
-  .hero { padding: 4rem 2rem 2.5rem; }
-  .hero h1 { font-size: 38px; }
-  .hero-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:1.5rem; }
-  .cta-secondary { display:inline-block; background:var(--bg); color:var(--purple); border:1px solid var(--purple); border-radius:var(--radius-lg); padding:14px 28px; font-size:15px; font-weight:600; text-decoration:none; }
-  .cta-secondary:hover { background:var(--purple-light); }
-  .hero-flow { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:2rem auto 0; max-width:680px; }
-  @media (max-width:560px){ .hero-flow{ grid-template-columns:repeat(2,1fr);} }
-  .flow-card { background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-lg); padding:12px; text-align:center; }
-  .flow-ico { font-size:22px; margin-bottom:4px; }
-  .flow-t { font-size:12px; font-weight:600; }
-  .workspace { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:1.2rem; }
-  @media (max-width:560px){ .workspace{ grid-template-columns:repeat(2,1fr);} }
-  .workspace-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 12px; text-align:center; }
-  .workspace-card .ico { font-size:26px; margin-bottom:6px; }
-  .workspace-card .tit { font-size:13px; font-weight:600; }
-  .workspace-card .sub { font-size:11px; color:var(--text-muted); margin-top:3px; }
-  .center-orbit { background:linear-gradient(135deg,var(--purple),var(--purple-dark)); color:#fff; border-radius:var(--radius-lg); padding:18px; text-align:center; margin:1.5rem 0; }
-  .center-orbit .big { font-size:20px; font-weight:700; margin-bottom:4px; }
-  .center-orbit .small { font-size:13px; color:#EEEDFE; }
-  .before-after { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:1.2rem; }
-  @media (max-width:560px){ .before-after{ grid-template-columns:1fr;} }
-  .ba-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; }
-  .ba-title { font-size:14px; font-weight:700; margin-bottom:10px; }
-  .ba-item { font-size:13px; color:var(--text-muted); padding:5px 0; }
-  .ba-time { margin-top:12px; font-size:22px; font-weight:700; color:var(--purple); }
-  .gain { margin-top:12px; background:var(--green-light); color:var(--green-dark); border-radius:var(--radius-lg); padding:14px; font-size:14px; font-weight:600; text-align:center; }
-  .connected-list { display:grid; grid-template-columns:1fr; gap:8px; margin-top:1rem; }
-  .connected-item { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 14px; font-size:13px; display:flex; gap:10px; align-items:flex-start; }
-  .connected-item span { font-size:18px; flex-shrink:0; }
-  .diff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:1.2rem; }
-  @media (max-width:560px){ .diff-grid{ grid-template-columns:1fr;} }
-  .diff-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; }
-  .diff-card h3 { font-size:14px; margin-bottom:8px; }
-  .diff-card p { font-size:12px; color:var(--text-muted); line-height:1.6; }
-  .adapt-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:1rem; }
-  .adapt-tag { background:var(--purple-light); color:var(--purple-dark); border-radius:20px; padding:7px 12px; font-size:12px; font-weight:600; }
-  .nav-cta.secondary-link { background:transparent; color:var(--purple); border:1px solid var(--purple); }
-  .nav-cta.secondary-link:hover { background:var(--purple-light); }
-"""
-
-css = css + "\n" + extra_css
-
-# Extract script from existing file and keep the interactive demo logic
-script_match = re.search(r"<script>(.*?)</script>", base, flags=re.S)
-script = script_match.group(1) if script_match else ""
-
-# Make sure text is consistent
-script = script.replace("Enregistré dans Fokus", "Enregistré dans VoxPro")
-
-# Full rebuilt HTML body
-html = f"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoxPro — Pilotez votre activité en parlant</title>
-<meta name="description" content="VoxPro est l'espace de travail intelligent qui transforme vos paroles en contacts, dossiers, rendez-vous, documents et actions métier.">
-<style>{css}</style>
+<title>Fokus — Dictez. On s'occupe du reste.</title>
+<meta name="description" content="Fokus supprime la saisie. Dictez vos contacts, notes, interventions — Fokus transcrit, classe et génère vos documents automatiquement.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #534AB7; --purple-light: #EEEDFE; --purple-dark: #3C3489;
+    --purple-darker: #26215C; --purple-mid: #AFA9EC;
+    --green: #639922; --green-light: #EAF3DE; --green-dark: #3B6D11;
+    --red: #E24B4A; --text: #1a1a1a; --text-muted: #6b7280;
+    --bg: #ffffff; --bg-secondary: #f8f7f5;
+    --border: rgba(0,0,0,0.12); --border-hover: rgba(0,0,0,0.25);
+    --radius-md: 8px; --radius-lg: 12px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+  .lp { max-width: 760px; margin: 0 auto; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 0.5px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+  .logo { font-size: 17px; font-weight: 600; color: var(--purple); display: flex; align-items: center; gap: 7px; text-decoration: none; }
+  .logo svg { width: 20px; height: 20px; }
+  .nav-cta { background: var(--purple); color: #fff; border: none; border-radius: var(--radius-md); padding: 8px 18px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+  .nav-cta:hover { background: var(--purple-dark); }
+  .hero { text-align: center; padding: 3rem 2rem 2rem; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--purple-light); color: var(--purple-dark); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 500; margin-bottom: 14px; }
+  .hero h1 { font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 10px; letter-spacing: -0.5px; }
+  .hero p { font-size: 15px; color: var(--text-muted); max-width: 520px; margin: 0 auto 2rem; line-height: 1.7; }
+  .divider { height: 0.5px; background: var(--border); margin: 0 24px; }
+  .section { padding: 2rem 24px; }
+  .eyebrow { font-size: 11px; font-weight: 600; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .section-h { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .section-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.7; }
+  .profil-label { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 12px; }
+  .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  @media (max-width: 480px) { .pgrid { grid-template-columns: repeat(2, 1fr); } }
+  .pb { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.15s; }
+  .pb:hover { border-color: var(--purple); background: var(--purple-light); }
+  .pb.active { border: 2px solid var(--purple); background: var(--purple-light); }
+  .pb .pb-icon { font-size: 22px; margin-bottom: 5px; }
+  .pb .pt { font-size: 11px; font-weight: 600; color: var(--text); }
+  .pb .ps { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .profil-content { display: none; }
+  .profil-content.visible { display: block; }
+  .pcgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 1rem; }
+  @media (max-width: 560px) { .pcgrid { grid-template-columns: 1fr; } }
+  .pc-card { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 14px; }
+  .pc-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .pain-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; font-size: 13px; }
+  .dot-r { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; margin-top: 5px; }
+  .dot-g { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; margin-top: 5px; }
+  .screen-card { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 14px; }
+  .phone-top { background: var(--purple); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .phone-title { color: #EEEDFE; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+  .srow { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .sav { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 8px; color: #fff; font-weight: 600; flex-shrink: 0; }
+  .stext { font-size: 11px; color: #EEEDFE; flex: 1; }
+  .sbadge { font-size: 9px; padding: 2px 6px; border-radius: 5px; color: #fff; }
+  .dmini { display: flex; align-items: center; gap: 8px; background: var(--bg-secondary); border-radius: var(--radius-md); padding: 7px 10px; margin-bottom: 5px; }
+  .dmini-icon { font-size: 16px; flex-shrink: 0; }
+  .dmini-t { font-size: 11px; font-weight: 500; }
+  .dmini-s { font-size: 10px; color: var(--text-muted); }
+  .autre-box { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 16px; display: none; }
+  .autre-box.visible { display: block; }
+  .autre-inp { width: 100%; border: 1px solid var(--border-hover); border-radius: var(--radius-md); padding: 10px 12px; font-size: 13px; color: var(--text); background: var(--bg); margin-top: 8px; outline: none; }
+  .autre-inp:focus { border-color: var(--purple); }
+  .voix-wrap { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+  .scenario { background: var(--bg); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 14px 16px; font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem; font-style: italic; }
+  .scenario strong { color: var(--text); font-style: normal; font-weight: 600; }
+  .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  @media (max-width: 480px) { .steps3 { grid-template-columns: 1fr; } }
+  .step-c { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 14px; text-align: center; }
+  .snum { width: 26px; height: 26px; border-radius: 50%; background: var(--purple-light); color: var(--purple-dark); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .step-icon { font-size: 22px; margin-bottom: 5px; }
+  .step-c .stit { font-size: 12px; font-weight: 600; }
+  .step-c .stime { font-size: 11px; color: var(--purple); font-weight: 600; margin-top: 2px; }
+  .step-c .ssub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .mic-area { text-align: center; margin-bottom: 14px; }
+  .mic-btn { width: 56px; height: 56px; border-radius: 50%; background: var(--purple); border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 24px; }
+  .mic-btn:hover { background: var(--purple-dark); transform: scale(1.05); }
+  .mic-btn.rec { background: var(--red); }
+  .mic-status { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .mic-status.act { color: var(--red); font-weight: 600; }
+  .waves { display: flex; align-items: center; justify-content: center; gap: 4px; height: 24px; margin: 8px 0; }
+  .wbar { width: 4px; border-radius: 2px; background: var(--purple); height: 4px; transition: height 0.12s; }
+  .tbox { background: var(--bg); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 12px 14px; min-height: 50px; font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 10px; line-height: 1.6; }
+  .tbox.filled { color: var(--text); font-style: normal; }
+  .res-card { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 14px; display: none; }
+  .res-card.show { display: block; }
+  .res-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .res-av { width: 30px; height: 30px; border-radius: 50%; background: var(--purple-light); color: var(--purple-dark); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .res-name { font-size: 13px; font-weight: 600; }
+  .res-sub { font-size: 11px; color: var(--text-muted); }
+  .res-note { background: var(--purple-light); border-radius: var(--radius-md); padding: 10px 12px; font-size: 12px; color: var(--purple-darker); line-height: 1.6; margin-bottom: 8px; }
+  .rtags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .rtag { font-size: 10px; padding: 3px 9px; border-radius: 10px; background: var(--bg-secondary); color: var(--text-muted); border: 1px solid var(--border); }
+  .q-sec { margin-top: 1.5rem; }
+  .q-t { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .q-s { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+  .qopts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 480px) { .qopts { grid-template-columns: 1fr; } }
+  .qopt { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 11px 13px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+  .qopt:hover { border-color: var(--purple); background: var(--purple-light); }
+  .qopt.sel { border: 2px solid var(--purple); background: var(--purple-light); color: var(--purple-darker); font-weight: 500; }
+  .qopt-icon { font-size: 18px; flex-shrink: 0; }
+  .reveal { background: var(--purple-light); border-radius: var(--radius-lg); border: 1px solid var(--purple-mid); padding: 14px 16px; margin-top: 12px; display: none; }
+  .reveal.show { display: block; }
+  .reveal-t { font-size: 13px; font-weight: 600; color: var(--purple-darker); margin-bottom: 5px; }
+  .reveal-b { font-size: 12px; color: var(--purple-dark); line-height: 1.6; }
+  .gen-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .gen-card { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 14px; text-align: center; }
+  .gen-icon { font-size: 26px; margin-bottom: 6px; }
+  .gen-t { font-size: 12px; font-weight: 600; }
+  .gen-s { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .ai-bar { background: var(--purple-light); border-radius: var(--radius-lg); border: 1px solid var(--purple-mid); padding: 14px 16px; }
+  .ai-lbl { font-size: 11px; color: var(--purple); font-weight: 600; display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+  .ai-line { height: 6px; border-radius: 3px; background: var(--purple-mid); margin-bottom: 5px; }
+  .ai-foot { font-size: 11px; color: var(--purple); margin-top: 6px; }
+  /* DEMO */
+  .demo-wrap { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 1.5rem; }
+  .scenario-tabs { display: flex; gap: 6px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .stab { padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); transition: all 0.15s; }
+  .stab:hover { border-color: var(--purple); color: var(--purple); }
+  .stab.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .demo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  @media (max-width: 560px) { .demo-grid { grid-template-columns: 1fr; } }
+  .demo-left { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 14px; }
+  .demo-right { display: flex; flex-direction: column; gap: 10px; }
+  .dictee-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .script-box { background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 10px 12px; font-size: 12px; color: var(--text-muted); font-style: italic; line-height: 1.6; margin-bottom: 10px; min-height: 60px; }
+  .d-mic-zone { text-align: center; margin-bottom: 10px; }
+  .d-mic-btn { width: 52px; height: 52px; border-radius: 50%; background: var(--purple); border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; transition: all 0.2s; }
+  .d-mic-btn:hover { background: var(--purple-dark); transform: scale(1.05); }
+  .d-mic-btn.rec { background: var(--red); }
+  .d-mic-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .d-mic-label.act { color: var(--red); font-weight: 600; }
+  .d-waves { display: flex; align-items: center; justify-content: center; gap: 3px; height: 18px; margin: 5px 0; }
+  .wb { width: 3px; border-radius: 2px; background: var(--purple); height: 3px; transition: height 0.1s; }
+  .d-transcript { background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border); padding: 9px 11px; font-size: 11px; color: var(--text-muted); font-style: italic; min-height: 40px; line-height: 1.5; margin-bottom: 8px; }
+  .d-transcript.filled { color: var(--text); font-style: normal; }
+  .result-panel { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 12px; display: none; }
+  .result-panel.show { display: block; }
+  .rp-title { font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 8px; }
+  .field-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 0.5px solid var(--border); font-size: 11px; }
+  .field-row:last-child { border-bottom: none; }
+  .field-label { color: var(--text-muted); width: 80px; flex-shrink: 0; }
+  .field-value { color: var(--text); font-weight: 600; flex: 1; }
+  .badge-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .demo-badge { font-size: 9px; padding: 2px 7px; border-radius: 8px; background: var(--purple-light); color: var(--purple-dark); }
+  .note-content { font-size: 11px; color: var(--text); line-height: 1.5; }
+  .note-date { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+  .doc-preview { background: var(--purple-light); border-radius: var(--radius-md); padding: 8px 10px; margin-top: 4px; }
+  .doc-preview-title { font-size: 10px; font-weight: 600; color: var(--purple); margin-bottom: 4px; }
+  .doc-line { height: 5px; border-radius: 2px; background: var(--purple-mid); margin-bottom: 4px; }
+  .doc-note { font-size: 10px; color: var(--purple); margin-top: 4px; }
+  .reset-btn { width: 100%; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 7px; font-size: 11px; color: var(--text-muted); cursor: pointer; margin-top: 4px; }
+  .reset-btn:hover { border-color: var(--purple); color: var(--purple); }
+  .step-indicator { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+  .step-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--bg-secondary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: var(--text-muted); flex-shrink: 0; transition: all 0.3s; }
+  .step-dot.done { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .step-dot.active { background: var(--purple-light); color: var(--purple); border-color: var(--purple); }
+  .step-line { flex: 1; height: 1px; background: var(--border); }
+  .step-line.done { background: var(--purple); }
+  /* PRICING */
+  .pricing-wrap { background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 1rem; }
+  .activation-note { display: inline-block; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 16px; font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .activation-note strong { color: var(--text); }
+  .price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 1rem; }
+  @media (max-width: 480px) { .price-grid { grid-template-columns: 1fr; } }
+  .price-card { background: var(--bg); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 18px; }
+  .price-card.featured { border: 2px solid var(--purple); }
+  .price-badge { background: #E6F1FB; color: #0C447C; font-size: 11px; padding: 4px 12px; border-radius: 12px; display: inline-block; margin-bottom: 8px; font-weight: 500; }
+  .price-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .price-amt { font-size: 28px; font-weight: 700; color: var(--purple); }
+  .price-period { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+  .price-feat { font-size: 13px; color: var(--text-muted); line-height: 2; }
+  .price-feat .check { color: var(--green); margin-right: 5px; }
+  .limit-note { text-align: center; font-size: 12px; color: var(--text-muted); padding: 10px; background: var(--bg); border-radius: var(--radius-md); border: 1px solid var(--border); }
+  .cta-sec { text-align: center; padding: 2.5rem 2rem; }
+  .cta-h { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .cta-s { font-size: 14px; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .cta-btn { display: inline-block; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-lg); padding: 14px 32px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s; text-decoration: none; }
+  .cta-btn:hover { background: var(--purple-dark); }
+  .cta-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+  footer { border-top: 0.5px solid var(--border); padding: 16px 24px; text-align: center; }
+  .footer-logo { font-size: 14px; font-weight: 600; color: var(--purple); }
+  .mt-12 { margin-top: 12px; }
+</style>
 </head>
 <body>
 <div class="lp">
@@ -85,66 +198,97 @@ html = f"""<!DOCTYPE html>
       <circle cx="10" cy="10" r="4" stroke="#534AB7" stroke-width="1.5"/>
       <circle cx="10" cy="10" r="1.5" fill="#534AB7"/>
     </svg>
-    VoxPro
+    Fokus
   </a>
-  <div style="display:flex;gap:8px;align-items:center;">
-    <a class="nav-cta secondary-link" href="#demo">Voir la démo</a>
-    <a class="nav-cta" href="https://tally.so/r/gDOGQD" target="_blank">Rejoindre la bêta</a>
-  </div>
+  <a class="nav-cta" href="https://tally.so/r/gDOGQD" target="_blank">Participer à l'étude</a>
 </nav>
 
 <div class="hero">
-  <div class="hero-badge">✦ Interface métier vocale — en cours de lancement</div>
-  <h1>Pilotez votre activité<br>en parlant.</h1>
-  <p>VoxPro est l'espace de travail intelligent qui transforme automatiquement vos paroles en contacts, dossiers, rendez-vous, documents et actions métier.</p>
-  <div class="hero-actions">
-    <a class="cta-btn" href="https://tally.so/r/gDOGQD" target="_blank">🚀 Rejoindre la bêta VoxPro</a>
-    <a class="cta-secondary" href="#demo">🎬 Voir la démo</a>
+  <div class="hero-badge">✦ En cours de développement — donnez-nous votre avis</div>
+  <h1>Dictez.<br>On s'occupe du reste.</h1>
+  <p>Fokus supprime la double saisie. Vos contacts, notes, interventions, dossiers — dictés en quelques secondes, classés automatiquement, accessibles partout.</p>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="eyebrow">Votre métier</div>
+  <div class="section-h">Fokus s'adapte à vous</div>
+  <div class="section-sub">Sélectionnez votre profil pour voir l'app dans votre contexte.</div>
+  <div class="profil-label">Je suis...</div>
+  <div class="pgrid" id="pgrid"></div>
+  <div class="profil-content" id="profilContent">
+    <div class="pcgrid">
+      <div class="pc-card">
+        <div class="pc-title">Ce que vous faites en double aujourd'hui</div>
+        <div id="painList"></div>
+        <div class="pc-title mt-12" style="color:#3B6D11;">Avec Fokus</div>
+        <div id="goodList"></div>
+      </div>
+      <div class="screen-card">
+        <div class="phone-top">
+          <div class="phone-title" id="screenTitle"></div>
+          <div id="screenRows"></div>
+        </div>
+        <div id="docList"></div>
+      </div>
+    </div>
   </div>
-  <div class="hero-flow">
-    <div class="flow-card"><div class="flow-ico">🎙️</div><div class="flow-t">Vous parlez</div></div>
-    <div class="flow-card"><div class="flow-ico">🧠</div><div class="flow-t">VoxPro comprend</div></div>
-    <div class="flow-card"><div class="flow-ico">⚙️</div><div class="flow-t">VoxPro organise</div></div>
-    <div class="flow-card"><div class="flow-ico">📂</div><div class="flow-t">Tout est à jour</div></div>
+  <div class="autre-box" id="autreBox">
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Votre métier n'est pas dans la liste ?</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Fokus peut s'adapter — dites-nous ce que vous faites.</div>
+    <input class="autre-inp" type="text" placeholder="Ex : photographe, coach, ostéopathe..." id="autreInp"/>
+    <div class="mt-12"><a class="nav-cta" href="https://tally.so/r/gDOGQD" target="_blank">Participer à l'étude — 5 min →</a></div>
   </div>
 </div>
 
 <div class="divider"></div>
 
 <div class="section">
-  <div class="eyebrow">Interface unique</div>
-  <div class="section-h">Votre activité. Une seule interface.</div>
-  <div class="section-sub">Fini les informations dispersées entre emails, carnets, fichiers Excel et applications. VoxPro centralise ce qui fait avancer votre activité.</div>
-
-  <div class="center-orbit">
-    <div class="big">VoxPro</div>
-    <div class="small">Le point central de votre organisation professionnelle</div>
-  </div>
-
-  <div class="workspace">
-    <div class="workspace-card"><div class="ico">👤</div><div class="tit">Contacts</div><div class="sub">Clients, prospects, partenaires</div></div>
-    <div class="workspace-card"><div class="ico">📂</div><div class="tit">Dossiers</div><div class="sub">Suivi complet de chaque sujet</div></div>
-    <div class="workspace-card"><div class="ico">📅</div><div class="tit">Rendez-vous</div><div class="sub">Agenda et prochaines étapes</div></div>
-    <div class="workspace-card"><div class="ico">📄</div><div class="tit">Documents</div><div class="sub">Pré-remplis et prêts à valider</div></div>
-    <div class="workspace-card"><div class="ico">✅</div><div class="tit">Tâches</div><div class="sub">Actions et relances à suivre</div></div>
-    <div class="workspace-card"><div class="ico">🎙️</div><div class="tit">Notes vocales</div><div class="sub">Transcrites, classées, reliées</div></div>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<div class="section">
-  <div class="eyebrow">De la parole à l'action</div>
-  <div class="section-h">Une phrase peut mettre votre activité à jour.</div>
-  <div class="section-sub">La voix n'est pas une simple dictée. C'est le moyen le plus rapide d'alimenter votre espace de travail.</div>
-
+  <div class="eyebrow">La fonctionnalité dont vous ne saviez pas avoir besoin</div>
+  <div class="section-h">Dictez. Fokus transcrit et enregistre.</div>
+  <div class="section-sub">Pas une app séparée, pas une intégration — vos notes vocales vont directement dans la fiche du contact concerné, dans votre base de données.</div>
   <div class="voix-wrap">
-    <div class="scenario"><strong>Exemple.</strong> “Nouveau client. Monsieur Martin. Intervention mardi à 9h. Devis estimé 650 euros. Prévoir une relance vendredi.”</div>
-    <div class="steps3 action-steps">
-      <div class="step-c"><div class="snum">1</div><div class="step-icon">🎙️</div><div class="stit">Vous parlez</div><div class="stime">30 sec</div><div class="ssub">Dictée naturelle</div></div>
-      <div class="step-c"><div class="snum">2</div><div class="step-icon">🧠</div><div class="stit">VoxPro comprend</div><div class="stime">Instantané</div><div class="ssub">Client, date, montant</div></div>
-      <div class="step-c"><div class="snum">3</div><div class="step-icon">⚙️</div><div class="stit">VoxPro agit</div><div class="stime">Automatique</div><div class="ssub">RDV, tâche, document</div></div>
-      <div class="step-c"><div class="snum">4</div><div class="step-icon">✅</div><div class="stit">Vous validez</div><div class="stime">2 min</div><div class="ssub">Tout est prêt</div></div>
+    <div class="scenario"><strong>Scénario réel.</strong> Vous sortez d'un RDV. Budget 15 000 €, décision en septembre, livraison express. Prochain appel dans 5 minutes. Vous ouvrez Fokus, tapez le micro, dictez en marchant. La note apparaît sur la fiche, horodatée, retrouvable pour toujours.</div>
+    <div class="steps3">
+      <div class="step-c"><div class="snum">1</div><div class="step-icon">🚪</div><div class="stit">Sortie de RDV</div><div class="stime">0 sec</div><div class="ssub">Tout est en tête</div></div>
+      <div class="step-c"><div class="snum">2</div><div class="step-icon">🎙️</div><div class="stit">Tap + dictée</div><div class="stime">30 sec</div><div class="ssub">Mains libres</div></div>
+      <div class="step-c"><div class="snum">3</div><div class="step-icon">✅</div><div class="stit">Note enregistrée</div><div class="stime">Automatique</div><div class="ssub">Sur la fiche contact</div></div>
+    </div>
+    <div class="mic-area">
+      <button class="mic-btn" id="micBtn" aria-label="Simuler une dictée vocale">🎙️</button>
+      <div class="waves">
+        <div class="wbar" id="w1"></div><div class="wbar" id="w2"></div><div class="wbar" id="w3"></div>
+        <div class="wbar" id="w4"></div><div class="wbar" id="w5"></div><div class="wbar" id="w6"></div>
+      </div>
+      <div class="mic-status" id="micSt">Cliquez pour simuler une dictée</div>
+    </div>
+    <div class="tbox" id="tbox">La transcription apparaîtra ici...</div>
+    <div class="res-card" id="resCard">
+      <div class="res-hdr">
+        <div class="res-av">MD</div>
+        <div><div class="res-name">Martin Dupont · Dupont SAS</div><div class="res-sub">Note vocale · À l'instant</div></div>
+      </div>
+      <div class="res-note" id="resNote"></div>
+      <div class="rtags">
+        <span class="rtag">Suivi sept.</span>
+        <span class="rtag">Budget 15 000 €</span>
+        <span class="rtag">Livraison express</span>
+      </div>
+    </div>
+  </div>
+  <div class="q-sec">
+    <div class="q-t">Après un RDV ou un appel, comment notez-vous les informations ?</div>
+    <div class="q-s">Cette question fait partie de l'étude de marché Fokus.</div>
+    <div class="qopts">
+      <div class="qopt" onclick="selectQ(this,'tape')"><span class="qopt-icon">⌨️</span>Je tape sur mon téléphone</div>
+      <div class="qopt" onclick="selectQ(this,'papier')"><span class="qopt-icon">📓</span>Je note sur papier</div>
+      <div class="qopt" onclick="selectQ(this,'email')"><span class="qopt-icon">📧</span>Je m'envoie un email</div>
+      <div class="qopt" onclick="selectQ(this,'rien')"><span class="qopt-icon">🧠</span>Je retiens de tête</div>
+    </div>
+    <div class="reveal" id="revealBox">
+      <div class="reveal-t">✦ <span id="revT"></span></div>
+      <div class="reveal-b" id="revB"></div>
     </div>
   </div>
 </div>
@@ -152,25 +296,9 @@ html = f"""<!DOCTYPE html>
 <div class="divider"></div>
 
 <div class="section">
-  <div class="eyebrow">Tout est relié</div>
-  <div class="section-h">Une information saisie une seule fois. Disponible partout.</div>
-  <div class="section-sub">Chaque parole enrichit automatiquement votre espace de travail : le dossier, les documents, les rendez-vous, les tâches et l'historique restent connectés.</div>
-
-  <div class="connected-list">
-    <div class="connected-item"><span>👤</span><div><strong>La fiche contact</strong> est créée ou mise à jour avec les informations détectées.</div></div>
-    <div class="connected-item"><span>📅</span><div><strong>Le rendez-vous</strong> est ajouté à l'agenda avec le contexte utile.</div></div>
-    <div class="connected-item"><span>📄</span><div><strong>Le document métier</strong> est préparé à partir des données déjà connues.</div></div>
-    <div class="connected-item"><span>🔔</span><div><strong>La relance</strong> est programmée pour éviter les oublis.</div></div>
-    <div class="connected-item"><span>📂</span><div><strong>L'historique</strong> reste disponible dans le bon dossier, au bon endroit.</div></div>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<div class="section" id="demo">
-  <div class="eyebrow">Démonstration</div>
-  <div class="section-h">Découvrez VoxPro en action.</div>
-  <div class="section-sub">Choisissez un contexte professionnel et observez comment VoxPro détecte les informations importantes, crée les actions nécessaires et prépare le document.</div>
+  <div class="eyebrow">Essayez par vous-même</div>
+  <div class="section-h">Dictez. Fokus fait le reste.</div>
+  <div class="section-sub">Choisissez votre métier, cliquez sur le micro — voyez Fokus créer votre fiche, enregistrer votre note et générer votre document en temps réel.</div>
   <div class="demo-wrap">
     <div class="scenario-tabs" id="dTabs"></div>
     <div class="step-indicator">
@@ -182,29 +310,29 @@ html = f"""<!DOCTYPE html>
     </div>
     <div class="demo-grid">
       <div class="demo-left">
-        <div class="dictee-label">Ce que vous dites</div>
+        <div class="dictee-label">Ce que vous dictez</div>
         <div class="script-box" id="dScript"></div>
         <div class="d-mic-zone">
           <button class="d-mic-btn" id="dMicBtn" aria-label="Lancer la simulation">🎙️</button>
           <div class="d-waves"><div class="wb" id="b1"></div><div class="wb" id="b2"></div><div class="wb" id="b3"></div><div class="wb" id="b4"></div><div class="wb" id="b5"></div></div>
-          <div class="d-mic-label" id="dMicLabel">Cliquez pour parler</div>
+          <div class="d-mic-label" id="dMicLabel">Cliquez pour dicter</div>
         </div>
         <div class="d-transcript" id="dTranscript">La transcription apparaîtra ici...</div>
         <button class="reset-btn" id="dResetBtn" onclick="resetDemo()" style="display:none;">↺ Recommencer</button>
       </div>
       <div class="demo-right">
         <div class="result-panel" id="dPanelContact">
-          <div class="rp-title">🧠 Informations détectées</div>
+          <div class="rp-title">✦ Fiche créée automatiquement</div>
           <div id="dContactFields"></div>
           <div class="badge-row" id="dContactBadges"></div>
         </div>
         <div class="result-panel" id="dPanelNote">
-          <div class="rp-title">⚙️ Actions métier créées</div>
+          <div class="rp-title">🎙️ Note enregistrée</div>
           <div class="note-content" id="dNoteContent"></div>
           <div class="note-date" id="dNoteDate"></div>
         </div>
         <div class="result-panel" id="dPanelDoc">
-          <div class="rp-title">✅ Résultat prêt à valider</div>
+          <div class="rp-title">✦ Document généré par IA</div>
           <div class="doc-preview">
             <div class="doc-preview-title">📄 <span id="dDocTitle"></span></div>
             <div class="doc-line" style="width:90%;"></div>
@@ -215,77 +343,27 @@ html = f"""<!DOCTYPE html>
         </div>
       </div>
     </div>
-    <div class="limit-note" style="margin-top:14px;">
-      ⏱️ Sans VoxPro : saisie + agenda + document ≈ 19 min · Avec VoxPro : parole + validation ≈ 2 min
-    </div>
   </div>
 </div>
 
 <div class="divider"></div>
 
 <div class="section">
-  <div class="eyebrow">Gain de temps</div>
-  <div class="section-h">Moins d'administration. Plus de métier.</div>
-  <div class="section-sub">VoxPro réduit la saisie, les recherches, les oublis et les documents à refaire.</div>
-
-  <div class="before-after">
-    <div class="ba-card">
-      <div class="ba-title">Sans VoxPro</div>
-      <div class="ba-item">📞 Échange client</div>
-      <div class="ba-item">📝 Saisie des informations</div>
-      <div class="ba-item">📅 Création du rendez-vous</div>
-      <div class="ba-item">📄 Préparation du document</div>
-      <div class="ba-time">≈ 19 min</div>
-    </div>
-    <div class="ba-card">
-      <div class="ba-title">Avec VoxPro</div>
-      <div class="ba-item">🎙️ Parole naturelle</div>
-      <div class="ba-item">🧠 Analyse automatique</div>
-      <div class="ba-item">⚙️ Actions créées</div>
-      <div class="ba-item">✅ Validation finale</div>
-      <div class="ba-time">≈ 2 min</div>
-    </div>
+  <div class="eyebrow">Le vrai différenciateur</div>
+  <div class="section-h">Vos documents se génèrent seuls</div>
+  <div class="section-sub">Fokus utilise l'IA pour remplir automatiquement vos documents depuis vos fiches. Un bon d'intervention, un compte-rendu, des conclusions — en quelques secondes.</div>
+  <div class="gen-grid">
+    <div class="gen-card"><div class="gen-icon">👤</div><div class="gen-t">Fiche contact</div><div class="gen-s">Nom, société, historique</div></div>
+    <div class="gen-card"><div class="gen-icon">🎙️</div><div class="gen-t">Notes vocales</div><div class="gen-s">Transcrites dans la base</div></div>
+    <div class="gen-card"><div class="gen-icon">🕐</div><div class="gen-t">Historique RDV</div><div class="gen-s">Actions et échanges</div></div>
+    <div class="gen-card"><div class="gen-icon">🧾</div><div class="gen-t">Suivi financier</div><div class="gen-s">Factures et statuts</div></div>
   </div>
-  <div class="gain">🚀 Jusqu'à 17 minutes gagnées par dossier</div>
-</div>
-
-<div class="divider"></div>
-
-<div class="section">
-  <div class="eyebrow">Adaptable</div>
-  <div class="section-h">Une plateforme qui s'adapte à votre activité.</div>
-  <div class="section-sub">VoxPro n'impose pas un métier unique. Il s'adapte à votre manière de travailler : gestion client, suivi de dossiers, interventions, formations, accompagnement, administratif ou relation commerciale.</div>
-  <div class="adapt-tags">
-    <div class="adapt-tag">Commercial</div>
-    <div class="adapt-tag">Artisan</div>
-    <div class="adapt-tag">Profession libérale</div>
-    <div class="adapt-tag">Formation</div>
-    <div class="adapt-tag">Association</div>
-    <div class="adapt-tag">Consultant</div>
-    <div class="adapt-tag">Coach</div>
-    <div class="adapt-tag">Immobilier</div>
-    <div class="adapt-tag">Juridique</div>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<div class="section">
-  <div class="eyebrow">Différenciation</div>
-  <div class="section-h">Pourquoi VoxPro est différent.</div>
-  <div class="diff-grid">
-    <div class="diff-card">
-      <h3>Les outils de dictée transcrivent.</h3>
-      <p>VoxPro comprend les informations importantes et les transforme en données exploitables.</p>
-    </div>
-    <div class="diff-card">
-      <h3>Les CRM stockent.</h3>
-      <p>VoxPro crée les actions, prépare les documents et relie les informations entre elles.</p>
-    </div>
-    <div class="diff-card">
-      <h3>Les logiciels métiers isolent.</h3>
-      <p>VoxPro centralise contacts, dossiers, rendez-vous, tâches et documents dans une même interface.</p>
-    </div>
+  <div class="ai-bar">
+    <div class="ai-lbl">✦ Fokus génère votre document...</div>
+    <div class="ai-line" style="width:90%;"></div>
+    <div class="ai-line" style="width:72%;"></div>
+    <div class="ai-line" style="width:55%;"></div>
+    <div class="ai-foot">Prévisualisation → validation → export PDF</div>
   </div>
 </div>
 
@@ -294,10 +372,10 @@ html = f"""<!DOCTYPE html>
 <div class="section">
   <div class="pricing-wrap">
     <div style="text-align:center;margin-bottom:1.5rem;">
-      <div class="eyebrow" style="text-align:center;">Tarifs bêta</div>
+      <div class="eyebrow" style="text-align:center;">Tarifs</div>
       <div class="section-h" style="text-align:center;margin-bottom:4px;">Simple et prévisible</div>
-      <div style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:1rem;">Un prix fixe pour tester VoxPro avec vos premiers usages métier.</div>
-      <div class="activation-note">Activation unique <strong>500 €</strong> pour configurer votre espace de travail</div>
+      <div style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:1rem;">Un prix fixe, quel que soit le nombre d'utilisateurs.</div>
+      <div class="activation-note">Activation unique <strong>500 €</strong> pour les deux offres</div>
     </div>
     <div class="price-grid">
       <div class="price-card">
@@ -305,8 +383,8 @@ html = f"""<!DOCTYPE html>
         <div class="price-amt">20 €</div>
         <div class="price-period">par mois · 5 modules au choix</div>
         <div class="price-feat">
-          <div><span class="check">✓</span>Contacts, tâches, notes</div>
-          <div><span class="check">✓</span>Modules configurables</div>
+          <div><span class="check">✓</span>5 modules configurables</div>
+          <div><span class="check">✓</span>Jusqu'à 15 utilisateurs</div>
           <div><span class="check">✓</span>Mobile + ordinateur</div>
           <div><span class="check">✓</span>Support inclus</div>
         </div>
@@ -315,12 +393,12 @@ html = f"""<!DOCTYPE html>
         <div class="price-badge">Recommandé</div>
         <div class="price-name">Pro</div>
         <div class="price-amt">35 €</div>
-        <div class="price-period">par mois · espace complet</div>
+        <div class="price-period">par mois · accès complet</div>
         <div class="price-feat">
           <div><span class="check">✓</span>10 modules complets</div>
-          <div><span class="check">✓</span>Documents pré-remplis</div>
-          <div><span class="check">✓</span>Actions et relances</div>
-          <div><span class="check">✓</span>Assistant vocal inclus</div>
+          <div><span class="check">✓</span>Jusqu'à 15 utilisateurs</div>
+          <div><span class="check">✓</span>Génération IA de documents</div>
+          <div><span class="check">✓</span>Dictée vocale incluse</div>
         </div>
       </div>
     </div>
@@ -331,27 +409,290 @@ html = f"""<!DOCTYPE html>
 <div class="divider"></div>
 
 <div class="cta-sec" id="cta-anchor">
-  <div class="eyebrow" style="text-align:center;margin-bottom:8px;">Bêta VoxPro</div>
-  <div class="cta-h">Prêt à piloter votre activité autrement ?</div>
-  <div class="cta-s">Rejoignez les premiers utilisateurs et découvrez comment quelques secondes de parole peuvent remplacer plusieurs minutes d'administration.</div>
-  <a class="cta-btn" href="https://tally.so/r/gDOGQD" target="_blank">🚀 Rejoindre la bêta VoxPro</a>
-  <div class="cta-note">Une question ? Contactez-nous à contact@voxpro.fr</div>
+  <div class="eyebrow" style="text-align:center;margin-bottom:8px;">Étude de marché</div>
+  <div class="cta-h">Fokus se construit avec vous</div>
+  <div class="cta-s">5 minutes · anonyme · vos réponses influencent directement le produit final</div>
+  <a class="cta-btn" href="https://tally.so/r/gDOGQD" target="_blank">Participer à l'étude — 5 min →</a>
+  <div class="cta-note">Déjà convaincu ? Contactez-nous à contact@fokus.fr</div>
 </div>
 
 <footer>
-  <div class="footer-logo">◎ VoxPro · 2026</div>
+  <div class="footer-logo">◎ Fokus · 2026</div>
 </footer>
 
 </div>
 
-<script>{script}</script>
+<script>
+const profils = [
+  {id:'commercial',label:'Commercial',sub:'Terrain',icon:'💼',title:'Pipeline commercial',
+    pains:['Ressaisir ses notes papier le soir au bureau','Chercher le numéro d\'un client entre deux appels','Rédiger le compte-rendu de visite après coup'],
+    goods:['Contact créé par dictée en 15 secondes','Note vocale liée à la fiche en sortant du RDV','Compte-rendu généré automatiquement par IA'],
+    rows:[{av:'MD',name:'Martin Dupont',badge:'Client',bc:'rgba(100,200,100,0.35)'},{av:'SL',name:'Sophie Lemaire',badge:'Prospect',bc:'rgba(255,180,30,0.4)'},{av:'PB',name:'Paul Bernard',badge:'Relance J-2',bc:'rgba(220,80,80,0.35)'}],
+    docs:[{icon:'📄',t:'Compte-rendu de visite',s:'Généré par IA'},{icon:'📊',t:'Proposition commerciale',s:'Auto-remplie'}]},
+  {id:'avocat',label:'Avocat',sub:'Cabinet',icon:'⚖️',title:'Dossiers en cours',
+    pains:['Calculer les délais procéduraux à la main','Ressaisir les infos client dans plusieurs outils','Rédiger les conclusions depuis zéro à chaque fois'],
+    goods:['Dossier créé par dictée en 20 secondes','Délais calculés automatiquement','Brouillon pré-structuré depuis l\'historique du dossier'],
+    rows:[{av:'CF',name:'Ferrand c/ Martin',badge:'Audience J-12',bc:'rgba(220,80,80,0.35)'},{av:'DB',name:'Dubois succession',badge:'En cours',bc:'rgba(80,130,220,0.35)'},{av:'LM',name:'Lopez licenciement',badge:'Plaidoirie',bc:'rgba(255,180,30,0.4)'}],
+    docs:[{icon:'📝',t:'Conclusions n°2',s:'Brouillon IA prêt'},{icon:'✉️',t:'Mise en demeure',s:'Variables auto-remplies'}]},
+  {id:'artisan',label:'Artisan BTP',sub:'Chantier',icon:'🔧',title:'Chantiers du jour',
+    pains:['Refaire les bons d\'intervention au bureau le soir','Retrouver l\'adresse et le contact du client','Rédiger le rapport de chantier après l\'intervention'],
+    goods:['Bon d\'intervention créé par dictée sur le chantier','Fiche client accessible en un tap','Rapport généré automatiquement avec photos et notes'],
+    rows:[{av:'DF',name:'Dupont — toiture',badge:'En cours',bc:'rgba(100,200,100,0.35)'},{av:'MR',name:'Martin — plomberie',badge:'Terminé',bc:'rgba(80,130,220,0.35)'},{av:'LB',name:'Lebrun — électricité',badge:'Demain',bc:'rgba(255,180,30,0.4)'}],
+    docs:[{icon:'✅',t:"Bon d'intervention",s:"Signature sur l'app, sur place"},{icon:'🧾',t:'Rapport de chantier',s:'Photos + notes'}]},
+  {id:'mission',label:'Chargé de mission',sub:'Association',icon:'📋',title:'Projets en cours',
+    pains:['Ressaisir les comptes-rendus de réunion','Suivre les subventions dans plusieurs fichiers','Retrouver les coordonnées des partenaires'],
+    goods:['CR de réunion dicté en sortant de la salle','Alertes automatiques sur les échéances','Annuaire partenaires centralisé et accessible'],
+    rows:[{av:'CA',name:'Projet Région Alpha',badge:'Dossier J-20',bc:'rgba(220,80,80,0.35)'},{av:'PB',name:'Partenariat Mairie',badge:'En cours',bc:'rgba(100,200,100,0.35)'},{av:'SE',name:'Séminaire annuel',badge:'Planifié',bc:'rgba(255,180,30,0.4)'}],
+    docs:[{icon:'📓',t:'Compte-rendu réunion',s:'Depuis notes vocales'},{icon:'📈',t:"Bilan d'activité",s:'Données agrégées'}]},
+  {id:'immo',label:'Agent immobilier',sub:'Vente / Location',icon:'🏢',title:'Biens en portefeuille',
+    pains:['Imprimer les fiches biens avant chaque visite','Rédiger le bon de visite à la main sur place','Ressaisir les retours acquéreurs après la visite'],
+    goods:['Fiche bien dictée et créée en 20 secondes','Bon de visite généré et signable sur tablette','Note vocale post-visite liée automatiquement au bien'],
+    rows:[{av:'T3',name:'T3 Caen centre',badge:'Visite J+2',bc:'rgba(255,180,30,0.4)'},{av:'MA',name:'Maison Hérouville',badge:'Offre reçue',bc:'rgba(100,200,100,0.35)'},{av:'ST',name:'Studio Bayeux',badge:'Disponible',bc:'rgba(80,130,220,0.35)'}],
+    docs:[{icon:'🏠',t:'Bon de visite',s:"Signature directement sur l'app"},{icon:'📃',t:"Offre d'achat",s:'Variables auto-remplies'}]},
+  {id:'domicile',label:'Aide à domicile',sub:'EHPAD / Domicile',icon:'❤️',title:'Bénéficiaires du jour',
+    pains:['Écrire les transmissions à la main entre deux visites','Retrouver la fiche bénéficiaire en urgence','Ressaisir le planning d\'intervention chaque semaine'],
+    goods:['Transmission dictée vocalement en 30 secondes','Fiche bénéficiaire accessible immédiatement','Planning synchronisé avec toute l\'équipe'],
+    rows:[{av:'MR',name:'Mme Rousseau',badge:'Visite 09h',bc:'rgba(100,200,100,0.35)'},{av:'JP',name:'M. Perrin',badge:'Alerte médicale',bc:'rgba(220,80,80,0.35)'},{av:'CD',name:'Mme Durand',badge:'Visite 14h',bc:'rgba(80,130,220,0.35)'}],
+    docs:[{icon:'📋',t:'Fiche de transmission',s:'Dictée vocale → texte'},{icon:'📅',t:'Planning intervention',s:'Synchronisé équipe'}]},
+  {id:'formation',label:'Formation',sub:'OF / Formateur',icon:'🎓',title:'Sessions en cours',
+    pains:['Faire signer les émargements papier à scanner','Créer les attestations une par une','Ressaisir les bilans stagiaires dans plusieurs outils'],
+    goods:["Émargement signé sur l'app, sans papier",'Attestation générée en 1 tap depuis la fiche','Bilan de session généré automatiquement depuis les données session'],
+    rows:[{av:'JS',name:'JS React — 12 stagiaires',badge:"Aujourd'hui",bc:'rgba(100,200,100,0.35)'},{av:'IA',name:'IA pour TPE — 8 stagiaires',badge:'Demain',bc:'rgba(255,180,30,0.4)'},{av:'EX',name:'Excel avancé',badge:'J+5',bc:'rgba(80,130,220,0.35)'}],
+    docs:[{icon:'🏅',t:'Attestation de présence',s:'Par stagiaire'},{icon:'📊',t:'Bilan de formation',s:'Données session'}]},
+  {id:'asso',label:'Association',sub:'Bureau / Bénévoles',icon:'👥',title:'Adhérents actifs',
+    pains:['Ressaisir les fiches adhérents dans plusieurs fichiers','Oublier de relancer les cotisations en retard','Rédiger les CR d\'AG après la réunion'],
+    goods:['Adhérent créé par dictée en 15 secondes','Alerte automatique cotisation échue','CR d\'AG généré depuis vos notes vocales'],
+    rows:[{av:'ML',name:'Marie Laurent',badge:'Cotisation OK',bc:'rgba(100,200,100,0.35)'},{av:'PD',name:'Pierre Dupont',badge:'Relance J-3',bc:'rgba(220,80,80,0.35)'},{av:'SB',name:'Sophie Bernard',badge:'Bénévole',bc:'rgba(80,130,220,0.35)'}],
+    docs:[{icon:'📄',t:"CR d'assemblée générale",s:'Depuis notes vocales'},{icon:'✉️',t:'Courrier adhérent',s:'Auto-personnalisé'}]},
+  {id:'autre',label:'Autre métier',sub:'Contactez-nous',icon:'➕',title:'',pains:[],goods:[],rows:[],docs:[]}
+];
+
+const reveals = {
+  tape:{t:'Vous perdez du temps à taper',b:"La saisie après un RDV prend en moyenne 4 minutes. Avec Fokus, vous dictez en marchant — 30 secondes, mains libres."},
+  papier:{t:'Vos notes papier disparaissent',b:"Un carnet perdu et l'information n'existe plus. Fokus transcrit votre voix et lie la note à la fiche contact."},
+  email:{t:'Vos emails se noient dans la boîte',b:"Retrouvabilité nulle. Fokus enregistre directement sur la fiche du contact — retrouvable en 1 tap."},
+  rien:{t:'Vous perdez 30% des informations',b:"La mémoire oublie les détails en moins d'une heure. Fokus vous permet de dicter avant d'oublier."}
+};
+
+function selectProfil(id) {
+  document.querySelectorAll('.pb').forEach(b => b.classList.remove('active'));
+  document.getElementById('pb-' + id).classList.add('active');
+  if (id === 'autre') {
+    document.getElementById('profilContent').classList.remove('visible');
+    document.getElementById('autreBox').classList.add('visible');
+    return;
+  }
+  document.getElementById('autreBox').classList.remove('visible');
+  const p = profils.find(x => x.id === id);
+  document.getElementById('screenTitle').textContent = p.title;
+  document.getElementById('painList').innerHTML = p.pains.map(t => `<div class="pain-item"><div class="dot-r"></div><span>${t}</span></div>`).join('');
+  document.getElementById('goodList').innerHTML = p.goods.map(t => `<div class="pain-item"><div class="dot-g"></div><span>${t}</span></div>`).join('');
+  document.getElementById('screenRows').innerHTML = p.rows.map(r => `<div class="srow"><div class="sav">${r.av}</div><div class="stext">${r.name}</div><div class="sbadge" style="background:${r.bc};">${r.badge}</div></div>`).join('');
+  document.getElementById('docList').innerHTML = p.docs.map(d => `<div class="dmini"><div class="dmini-icon">${d.icon}</div><div><div class="dmini-t">${d.t}</div><div class="dmini-s">${d.s}</div></div></div>`).join('');
+  document.getElementById('profilContent').classList.add('visible');
+}
+
+const grid = document.getElementById('pgrid');
+profils.forEach(p => {
+  const b = document.createElement('div');
+  b.className = 'pb'; b.id = 'pb-' + p.id;
+  b.innerHTML = `<div class="pb-icon">${p.icon}</div><div class="pt">${p.label}</div><div class="ps">${p.sub}</div>`;
+  b.onclick = () => selectProfil(p.id);
+  grid.appendChild(b);
+});
+
+function selectQ(el, key) {
+  document.querySelectorAll('.qopt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  const r = reveals[key];
+  document.getElementById('revT').textContent = r.t;
+  document.getElementById('revB').textContent = r.b;
+  document.getElementById('revealBox').classList.add('show');
+}
+
+let rec = false, wInt = null, tInt = null;
+const voixTxt = 'RDV positif avec Martin Dupont. Budget confirmé autour de 15 000 euros. Décision prévue en septembre, relancer fin août. Préférence livraison express. Envoyer proposition cette semaine.';
+const wids = ['w1','w2','w3','w4','w5','w6'];
+
+document.getElementById('micBtn').addEventListener('click', () => {
+  if (rec) return; rec = true;
+  const btn = document.getElementById('micBtn');
+  const st = document.getElementById('micSt');
+  const tb = document.getElementById('tbox');
+  const rc = document.getElementById('resCard');
+  btn.classList.add('rec'); btn.textContent = '⏹️';
+  st.textContent = 'Dictée en cours...'; st.classList.add('act');
+  tb.classList.remove('filled'); tb.textContent = ''; rc.classList.remove('show');
+  wInt = setInterval(() => { wids.forEach(id => { document.getElementById(id).style.height = (4 + Math.random() * 16) + 'px'; }); }, 120);
+  let i = 0;
+  tInt = setInterval(() => {
+    if (i < voixTxt.length) { tb.textContent += voixTxt[i++]; tb.classList.add('filled'); }
+    else {
+      clearInterval(tInt); clearInterval(wInt);
+      wids.forEach(id => { document.getElementById(id).style.height = '4px'; });
+      btn.classList.remove('rec'); btn.textContent = '🎙️';
+      st.textContent = 'Note enregistrée sur la fiche contact'; st.classList.remove('act');
+      document.getElementById('resNote').textContent = voixTxt;
+      rc.classList.add('show'); rec = false;
+    }
+  }, 32);
+});
+
+const dScenarios = [
+  {id:'commercial',label:'💼 Commercial',
+   script:'"Nouveau contact. Martin Dupont, société Dupont SAS. Téléphone 06 12 34 56 78. Email martin@dupontsas.fr. Budget 15 000 euros, décision en septembre."',
+   transcript:'Nouveau contact. Martin Dupont, société Dupont SAS. Téléphone 06 12 34 56 78. Email martin@dupontsas.fr. Budget 15 000 euros, décision en septembre.',
+   fields:[{l:'Nom',v:'Martin Dupont'},{l:'Société',v:'Dupont SAS'},{l:'Tél.',v:'06 12 34 56 78'},{l:'Email',v:'martin@dupontsas.fr'},{l:'Statut',v:'Prospect'}],
+   badges:['Budget 15 000 €','Décision sept.','Relance J+30'],
+   note:'Client potentiel — budget confirmé 15 000 €, décision prévue en septembre.',
+   docTitle:'Compte-rendu de prospection',docNote:'Généré depuis la fiche + note vocale'},
+  {id:'artisan',label:'🔧 Artisan',
+   script:'"Nouveau chantier. Client Lebrun, 12 rue de la Paix, Caen. Électricité, remplacement tableau. Mardi 17 juin matin. Devis 1 800 euros."',
+   transcript:'Nouveau chantier. Client Lebrun, 12 rue de la Paix, Caen. Électricité, remplacement tableau. Mardi 17 juin matin. Devis 1 800 euros.',
+   fields:[{l:'Client',v:'M. Lebrun'},{l:'Adresse',v:'12 rue de la Paix, Caen'},{l:'Travaux',v:'Électricité — tableau'},{l:'Date',v:'Mardi 17 juin'},{l:'Devis',v:'1 800 €'}],
+   badges:['Intervention J+5','Devis à envoyer'],
+   note:'Remplacement tableau électrique — client disponible mardi matin.',
+   docTitle:"Bon d'intervention",docNote:'Pré-rempli — à faire signer sur place'},
+  {id:'formateur',label:'🎓 Formateur',
+   script:'"Nouveau stagiaire. Sophie Martin, email sophie.martin@gmail.com, téléphone 07 45 23 11 89. Session IA pour TPE du 23 au 25 juin."',
+   transcript:'Nouveau stagiaire. Sophie Martin, email sophie.martin@gmail.com, téléphone 07 45 23 11 89. Session IA pour TPE du 23 au 25 juin.',
+   fields:[{l:'Stagiaire',v:'Sophie Martin'},{l:'Email',v:'sophie.martin@gmail.com'},{l:'Tél.',v:'07 45 23 11 89'},{l:'Session',v:'IA pour TPE'},{l:'Dates',v:'23 au 25 juin'}],
+   badges:['Convention à envoyer','Émargement préparé'],
+   note:'Inscription validée — convention à envoyer avant le 20 juin.',
+   docTitle:'Convention de formation',docNote:'Pré-remplie depuis la fiche stagiaire'},
+  {id:'avocat',label:'⚖️ Avocat',
+   script:'"Nouveau dossier. Cliente Claire Ferrand, litige commercial contre Martin SARL. Assignation reçue le 10 juin. Audience 15 septembre."',
+   transcript:'Nouveau dossier. Cliente Claire Ferrand, litige commercial contre Martin SARL. Assignation reçue le 10 juin. Audience 15 septembre.',
+   fields:[{l:'Client',v:'Claire Ferrand'},{l:'Partie adverse',v:'Martin SARL'},{l:'Nature',v:'Litige commercial'},{l:'Audience',v:'15 septembre'},{l:'Délai',v:'Conclusions J+30'}],
+   badges:['Conclusions J-60','Audience J-95'],
+   note:'Assignation reçue — délai conclusions calculé au 10 juillet.',
+   docTitle:'Fiche délais procéduraux',docNote:'Délais calculés automatiquement'}
+];
+
+let dCurrent = dScenarios[0], dRunning = false, dWInt = null, dTInt = null;
+const dWids = ['b1','b2','b3','b4','b5'];
+
+function dSetStep(n) {
+  [1,2,3].forEach(i => {
+    const d = document.getElementById('ds'+i);
+    d.classList.remove('active','done');
+    if(i < n) d.classList.add('done');
+    else if(i === n) d.classList.add('active');
+  });
+  [1,2].forEach(i => {
+    const l = document.getElementById('dl'+i);
+    l.classList.remove('done');
+    if(i < n) l.classList.add('done');
+  });
+}
+
+function setDScenario(s) {
+  dCurrent = s;
+  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  document.getElementById('dtab-'+s.id).classList.add('active');
+  document.getElementById('dScript').textContent = s.script;
+  resetDemo();
+}
+
+function resetDemo() {
+  if(dRunning){ clearInterval(dWInt); clearInterval(dTInt); dRunning = false; }
+  document.getElementById('dMicBtn').className = 'd-mic-btn';
+  document.getElementById('dMicBtn').textContent = '🎙️';
+  document.getElementById('dMicLabel').textContent = 'Cliquez pour dicter';
+  document.getElementById('dMicLabel').classList.remove('act');
+  document.getElementById('dTranscript').textContent = 'La transcription apparaîtra ici...';
+  document.getElementById('dTranscript').classList.remove('filled');
+  ['dPanelContact','dPanelNote','dPanelDoc'].forEach(id => document.getElementById(id).classList.remove('show'));
+  document.getElementById('dResetBtn').style.display = 'none';
+  document.getElementById('dContactFields').innerHTML = '';
+  document.getElementById('dContactBadges').innerHTML = '';
+  dWids.forEach(id => { document.getElementById(id).style.height = '3px'; });
+  dSetStep(1);
+}
+
+function dTypeFields(fields, badges, cb) {
+  const container = document.getElementById('dContactFields');
+  container.innerHTML = '';
+  document.getElementById('dContactBadges').innerHTML = '';
+  document.getElementById('dPanelContact').classList.add('show');
+  let fi = 0;
+  function nextField() {
+    if(fi >= fields.length) {
+      badges.forEach(b => {
+        const span = document.createElement('span');
+        span.className = 'demo-badge'; span.textContent = b;
+        document.getElementById('dContactBadges').appendChild(span);
+      });
+      if(cb) cb();
+      return;
+    }
+    const f = fields[fi++];
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.innerHTML = `<span class="field-label">${f.l}</span><span class="field-value" id="dfv-${fi}"></span>`;
+    container.appendChild(row);
+    const el = document.getElementById('dfv-'+fi);
+    let ci = 0;
+    const t = setInterval(() => {
+      if(ci < f.v.length) { el.textContent += f.v[ci++]; }
+      else { clearInterval(t); setTimeout(nextField, 100); }
+    }, 25);
+  }
+  nextField();
+}
+
+document.getElementById('dMicBtn').addEventListener('click', () => {
+  if(dRunning) return;
+  dRunning = true;
+  const btn = document.getElementById('dMicBtn');
+  const lbl = document.getElementById('dMicLabel');
+  const tr = document.getElementById('dTranscript');
+  btn.className = 'd-mic-btn rec'; btn.textContent = '⏹️';
+  lbl.textContent = 'Dictée en cours...'; lbl.classList.add('act');
+  tr.textContent = ''; tr.classList.remove('filled');
+  dSetStep(2);
+  dWInt = setInterval(() => { dWids.forEach(id => { document.getElementById(id).style.height = (3+Math.random()*14)+'px'; }); }, 110);
+  const txt = dCurrent.transcript;
+  let i = 0;
+  dTInt = setInterval(() => {
+    if(i < txt.length) { tr.textContent += txt[i++]; tr.classList.add('filled'); }
+    else {
+      clearInterval(dTInt); clearInterval(dWInt);
+      dWids.forEach(id => { document.getElementById(id).style.height = '3px'; });
+      btn.className = 'd-mic-btn'; btn.textContent = '✅';
+      lbl.textContent = 'Traitement en cours...'; lbl.classList.remove('act');
+      dSetStep(3);
+      setTimeout(() => {
+        lbl.textContent = 'Enregistré dans Fokus';
+        dTypeFields(dCurrent.fields, dCurrent.badges, () => {
+          setTimeout(() => {
+            document.getElementById('dPanelNote').classList.add('show');
+            document.getElementById('dNoteContent').textContent = dCurrent.note;
+            document.getElementById('dNoteDate').textContent = "Aujourd'hui · " + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+            setTimeout(() => {
+              document.getElementById('dPanelDoc').classList.add('show');
+              document.getElementById('dDocTitle').textContent = dCurrent.docTitle;
+              document.getElementById('dDocNote').textContent = dCurrent.docNote;
+              document.getElementById('dResetBtn').style.display = 'block';
+              dRunning = false;
+            }, 500);
+          }, 300);
+        });
+      }, 700);
+    }
+  }, 28);
+});
+
+const dTabs = document.getElementById('dTabs');
+dScenarios.forEach(s => {
+  const t = document.createElement('div');
+  t.className = 'stab'; t.id = 'dtab-'+s.id;
+  t.textContent = s.label;
+  t.onclick = () => setDScenario(s);
+  dTabs.appendChild(t);
+});
+
+setDScenario(dScenarios[0]);
+</script>
 </body>
 </html>
-"""
-
-# Remove legacy pgrid initialization from script if no pgrid exists (prevents JS error)
-html = re.sub(r"\nconst grid = document\.getElementById\('pgrid'\);\nprofils\.forEach\(p => \{.*?\n\}\);\n", "\n", html, flags=re.S)
-
-out = Path("/mnt/data/voxpro_refonte_interface_vocale.html")
-out.write_text(html, encoding="utf-8")
-print(f"Fichier créé : {out}")
